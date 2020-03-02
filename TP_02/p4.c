@@ -10,7 +10,10 @@ int main(int argc, char *argv[]){
     struct termios term, oldterm;
     int i,fd;
     char ch;
-
+    if (argc != 2) {
+        printf("Usage: %s <destination>\n", argv[0]);
+        return 1;
+    }
     write(STDOUT_FILENO, "\nName and classification(TAB to exit): ", 39);
 
     tcgetattr(STDIN_FILENO, &oldterm);
