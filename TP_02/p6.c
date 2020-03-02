@@ -26,7 +26,8 @@ int main(int argc, char *argv[])
 
  while ((direntp = readdir( dirp)) != NULL)
  {
-  if (lstat(direntp->d_name, &stat_buf)==-1)   // testar com stat()
+     //printf("Path: %s\n", direntp->d_name);
+  if (stat(direntp->d_name, &stat_buf)==-1)   // testar com stat()
   {
    perror("lstat ERROR");
    exit(3);
@@ -35,6 +36,8 @@ int main(int argc, char *argv[])
   else if (S_ISDIR(stat_buf.st_mode)) str = "directory";
   else str = "other";
   printf("%-25s - %s\n", direntp->d_name, str);
+  printf("I-node number: %ld\n", (long) stat_buf.st_ino);
+  printf("File size: %lld bytes\n\n",(long long) stat_buf.st_size);
  }
 
  closedir(dirp);
