@@ -9,8 +9,6 @@ void sigchld_handler(int signo) {
     printf("Entering SIGINT handler ...\n");   
     pid_t pid;
     int status;
-
-    /* EEEEXTEERMINAAATE! */
     while((pid = waitpid(0, &status, WNOHANG)) > 0);
     printf("Exiting SIGINT handler ...\n");  
 }
