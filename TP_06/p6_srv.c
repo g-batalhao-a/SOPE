@@ -1,47 +1,65 @@
-// PROGRAMA p06.c 
-#include <pthread.h> 
-#include <stdio.h> 
-#include <stdlib.h> 
-#define NUM_THREADS 10
-#include <unistd.h> 
-#include <sys/file.h> 
-#include <string.h> 
-#define MAX_MSG_LEN 20 
-int main(int argc, char *argv[]) { 
-    int   fd, opcode; 
-    if (argc!=2 && argc!=3) {   
-        printf("Usage: cli_03 <opcode> <username> OR cli_03 0\n");   
-        exit(1);  
-    }  
-    
-    fd=open("/tmp/requests",O_WRONLY); 
-    if (fd == -1) {   
-        printf("Oops !!! Service is closed !!!\n");   
-        exit(1); 
-    }  
-    printf("FIFO 'requests' openned in WRITEONLY mode\n");  
-    opcode=atoi(argv[1]);  
-    write(fd,&opcode,sizeof(int)); 
-    if (opcode!=0) {   
-        write(fd,argv[2],strlen(argv[2])+1);  
-    }  close(fd); 
-    return 0; 
-} 
-void *PrintHello(void *threadnum) {    
-    printf("Hello from thread no. %d!\n", *(int *) threadnum);    
-    pthread_exit(NULL); 
-} 
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/file.h>
+#include <signal.h>
+#include <errno.h>
+#include <string.h>
+#include <pthread.h>
 
-int main() {    
-    pthread_t threads[NUM_THREADS];    
-    int t;    
-    int *thrarg[NUM_THREADS];
-    
-    for(t=0; t< NUM_THREADS; t++){    
-        thrarg[t]=(int *)malloc(sizeof(int));
-        *thrarg[t]=t;   
-        printf("Creating thread %d\n", t);       
-        pthread_create(&threads[t], NULL, PrintHello, thrarg[t]);    
-    }    
-    pthread_exit(0); 
+#define MAX_NAME_LEN 50
+
+void * func(void * arg){
+
 }
+
+int main(void)
+{
+    int fd, fd_dummy;
+    char msg[MAX_NAME_LEN];
+    char fifo_name[MAX_NAME_LEN];
+    int num[2];
+
+    if (mkfifo("./fifo_req",0660)<0)
+        if (errno == EEXIST) printf("FIFO './fifo_req' already exists\n");
+        else printf("Can't create FIFO\n");
+    else 
+        printf("FIFO './fifo_req' sucessfully created\n");
+    
+    if ((fd=open("./fifo_req",O_RDONLY)) !=-1)
+        printf("FIFO './fifo_req' openned in READONLY mode\n");
+    
+    /*if ((fd_dummy=open("./fifo_req",O_WRONLY)) !=-1)
+        printf("FIFO './fifo_req' openned in WRITEONLY mode\n");*/
+
+    do{
+        if(read(fd,&msg,MAX_NAME_LEN)){
+            sscanf(msg,"%d:%d:%s",&num[0],&num[1],fifo_name);
+            if(num[0]!=0 || num[1]!=0){
+                printf("Operands: %d e %d. FIFO name = %s\n",num[0],num[1],fifo_name);
+                fd_dummy=open(fifo_name,O_WRONLY);
+                char client_msg[MAX_NAME_LEN];
+                sprintf(client_msg,"Sum=%d\tSub=%d\tDiv=%d\tDiv=%d\n",num[0]+num[1],num[0]-num[1],num[0]*num[1],num[0]/num[1]);
+                write(fd_dummy,&client_msg,MAX_NAME_LEN);
+                close(fd_dummy);
+            }
+        }
+        
+        //sleep(2);
+    }while(num[0]!=0 || num[1]!=0);
+
+    close(fd);
+
+
+    if (unlink("./fifo_req")<0)
+        printf("Error when destroying FIFO './fifo_req'\n");
+    else
+        printf("FIFO './fifo_req' has been destroyed\n");
+    
+
+    
+    
+    exit(0);
+} 
