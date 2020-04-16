@@ -13,7 +13,6 @@
 int main(int argc, char *argv[])
 {
     int fd, fd_dummy;
-    int num[2];
     char fifoName[MAX_MSG_LEN];
 
     if (argc!=3) {
@@ -52,6 +51,11 @@ int main(int argc, char *argv[])
         read(fd_dummy,&server_msg,MAX_MSG_LEN);
         printf("%s",server_msg);
         close(fd_dummy);
+
+        if (unlink(fifoName)<0)
+            printf("Error when destroying FIFO '%s'\n",fifoName);
+        else
+            printf("FIFO '%s' has been destroyed\n",fifoName);
     }
 
     return 0;
